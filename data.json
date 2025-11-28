@@ -1,0 +1,13 @@
+{
+  "general@katcall.com": {
+    "username": "GeneralChatUser",
+    "password": "123",
+    "lastSeen": "27.11.2025, 17:00:00"
+  },
+  "test@example.com": {
+    "username": "TestUser",
+    "password": "password123",
+    "lastSeen": "Online"
+  }
+}
+
