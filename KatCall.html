@@ -3,103 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KatCall Messenger</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --glass-bg: rgba(255, 255, 255, 0.15);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
-            --text-color: #fff;
-            --input-bg: rgba(255, 255, 255, 0.2);
-            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            --online-color: #4CAF50;
-            --offline-color: #f44336;
-        }
-        body.dark-mode {
-            --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            --glass-bg: rgba(0, 0, 0, 0.4);
-            --text-color: #e0e0e0;
-            --input-bg: rgba(0, 0, 0, 0.3);
-            --online-color: #69F0AE;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; transition: all 0.3s ease; }
-        
-        body {
-            background: var(--bg-gradient);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-color);
-            overflow: hidden;
-        }
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 16px;
-            border: var(--glass-border);
-            box-shadow: var(--shadow);
-        }
+    <title>KatCall</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="icon.png" type="image/png">
+</head>
+<body>
+    <div id="app">
+        <!-- Экран регистрации/входа -->
+        <div id="auth-screen" class="screen">
+            <h1>Добро пожаловать в Мессенджер!</h1>
+            <div class="form">
+                <input type="text" id="username" placeholder="Ваше имя (логин)" maxlength="20">
+                <button onclick="register()">Зарегистрироваться</button>
+                <p>Или войдите, если уже есть аккаунт:</p>
+                <input type="text" id="login-name" placeholder="Имя">
+                <button onclick="login()">Войти</button>
+            </div>
+        </div>
 
-        /* --- Auth Screens --- */
-        #auth-container { 
-            position: relative; 
-            max-width: 400px; 
-            width: 90%; 
-            height: auto; 
-            padding: 40px; 
-            display: none; /* Скрыто до загрузки initApp */
-        }
-        .auth-screen { 
-            display: none; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-        }
+        <!-- Основной экран чата -->
+        <div id="chat-screen" class="screen hidden">
+            <header>
+                <h2>Чаты</h2>
+                <button onclick="logout()">Выйти</button>
+            </header>
+            <div id="chats-list"></div>
+            <div class="input-area">
+                <input type="text" id="new-chat" placeholder="Имя собеседника для нового чата">
+                <button onclick="createChat()">Создать чат</button>
+            </div>
+        </div>
 
-        /* --- App Screen (Desktop/Wide) --- */
-        #app-screen { 
-            width: 95%; 
-            max-width: 1300px; 
-            height: 90vh; 
-            display: none; 
-            flex-direction: row; 
-            overflow: hidden; 
-        }
-
-        /* --- Mobile Adaptation (Vertical layout) --- */
-        @media (max-width: 800px) {
-            #app-screen {
-                width: 100%; 
-                height: 100vh; 
-                border-radius: 0; 
-                flex-direction: column;
-            }
-            .sidebar { 
-                width: 100% !important; 
-                height: 150px; 
-                min-height: 120px;
-                overflow-y: auto; 
-                border-bottom: var(--glass-border) !important; 
-                border-right: none !important; 
-            }
-        }
-
-        h1 { margin-bottom: 20px; font-weight: 300; letter-spacing: 2px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: var(--input-bg); color: var(--text-color); outline: none; }
-        input::placeholder { color: rgba(255,255,255,0.6); }
-        
-        button { padding: 12px 24px; border-radius: 8px; border: none; background: rgba(255, 255, 255, 0.3); color: white; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        button:hover { background: rgba(255, 255, 255, 0.5); }
-        .icon-btn { width: auto; padding: 8px; margin: 0 5px; background: none; }
-
-        /* --- Sidebar & Chats --- */
-        .sidebar { width: 300px; border-right: var(--glass-border); display: flex; flex-direction: column; padding: 20px; }
-        .chat-area { flex: 1; display: flex; flex-direction: column; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        <!-- Экран конкретного чата -->
+        <div id="messages-screen" class="screen hidden">
+            <header>
+                <button onclick="backToChats()">← Назад</button>
+                <h2 id="chat-title">Чат</h2>
+            </header>
+            <div id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="message-input" placeholder="Введите сообщение..." maxlength="500">
+                <button onclick="sendMessage()">Отправить</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .channel-list { list-style: none; overflow-y: auto; flex: 1; }
         .channel-item { padding: 10px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; background: var(--glass-bg); display: flex; align-items: center; }
         .channel-item:hover { background: rgba(255,255,255,0.1); }
