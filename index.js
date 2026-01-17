@@ -3,7 +3,7 @@ import axios from "axios";
 import fetch from "node-fetch";
 import { systemPrompt } from "./persona.js";
 
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const API_TOKEN = process.env.API_TOKEN;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 if (!TELEGRAM_TOKEN || !DEEPSEEK_API_KEY) {
