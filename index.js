@@ -2,37 +2,55 @@ import TelegramBot from "node-telegram-bot-api";
 import axios from "axios";
 import fetch from "node-fetch";
 
-// bothost даёт токен как API_TOKEN
 const TELEGRAM_TOKEN = process.env.API_TOKEN;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+
+// === ПРОСТОЙ ХАМСКИЙ FALLBACK (БЕЗ ИИ) ===
+const fallbackReplies = [
+  "Ты нормально можешь написать или как?",
+  "Я понял, но ты сейчас чё хотел?",
+  "Ку. И дальше что?",
+  "Ну привет, герой.",
+  "Ты это всерьёз сейчас?",
+  "Давай конкретнее, не тяни резину.",
+  "Я не телепат, если что.",
+  "О, опять ты.",
+  "Салам. Говори.",
+  "Ну?"
+];
+
+// === SYSTEM PROMPT ===
+const systemPrompt = `
+Ты живой человек.
+Иногда грубый, иногда саркастичный, иногда как кент.
+Можно слегка хамить.
+Отвечай коротко.
+Не извиняйся.
+`;
 
 // логируем, но НЕ падаем
 if (!TELEGRAM_TOKEN) {
   console.error("❌ API_TOKEN (Telegram) не задан");
 }
 if (!DEEPSEEK_API_KEY) {
-  console.warn("⚠️ DEEPSEEK_API_KEY не задан — бот будет отвечать без ИИ");
+  console.warn("⚠️ DEEPSEEK_API_KEY не задан — работаем в fallback-режиме");
 }
 
-// сброс старых сессий Telegram
+// сброс старых сессий
 if (TELEGRAM_TOKEN) {
   await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/deleteWebhook`);
 }
 
-// запускаем бота ТОЛЬКО если есть токен
 const bot = TELEGRAM_TOKEN
   ? new TelegramBot(TELEGRAM_TOKEN, { polling: true })
   : null;
 
-// простая память
+// память
 const memory = new Map();
 
-// характер (прямо тут, без файлов)
-const systemPrompt = `
-Ты живой человек.
-Иногда грубый, иногда саркастичный, иногда как кент.
-Отвечай коротко, без моралей и извинений.
-`;
+function randomFallback() {
+  return fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+}
 
 if (bot) {
   bot.on("message", async (msg) => {
@@ -41,15 +59,21 @@ if (bot) {
     const text = msg.text;
     if (!text) return;
 
+    // /start
+    if (text === "/start") {
+      bot.sendMessage(chatId, "Ну здарова. Пиши, не стесняйся.");
+      return;
+    }
+
     if (!memory.has(userId)) memory.set(userId, []);
     const history = memory.get(userId);
 
     history.push({ role: "user", content: text });
     if (history.length > 6) history.shift();
 
-    // если нет DeepSeek — простой ответ
+    // === ЕСЛИ НЕТ DEEPSEEK — СРАЗУ FALLBACK ===
     if (!DEEPSEEK_API_KEY) {
-      bot.sendMessage(chatId, "Пиши яснее, а то я не телепат.");
+      bot.sendMessage(chatId, randomFallback());
       return;
     }
 
@@ -62,7 +86,7 @@ if (bot) {
             { role: "system", content: systemPrompt },
             ...history
           ],
-          temperature: 1.0,
+          temperature: 1.1,
           max_tokens: 180
         },
         {
@@ -70,21 +94,22 @@ if (bot) {
             Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
             "Content-Type": "application/json"
           },
-          timeout: 20000
+          timeout: 15000
         }
       );
 
       const reply = res.data.choices[0].message.content;
+
       history.push({ role: "assistant", content: reply });
       bot.sendMessage(chatId, reply);
 
     } catch (e) {
-      bot.sendMessage(chatId, "Я туплю. Напиши позже.");
+      // 🔥 ВАЖНО: НЕ ОДНА И ТА ЖЕ ФРАЗА
+      bot.sendMessage(chatId, randomFallback());
     }
   });
 }
 
-// чтобы Node не падал
 process.on("unhandledRejection", (e) => {
-  console.error("Unhandled promise:", e);
+  console.error("Unhandled:", e);
 });
