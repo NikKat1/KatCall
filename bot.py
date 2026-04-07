@@ -1,9 +1,15 @@
+import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Вставь сюда свой токен от @BotFather
-API_TOKEN = '8641857829:AAFP_m33XSYE7QjBtKp57Opl_boYZsN6dNo'
+# Получаем токен из переменной окружения BOT_TOKEN
+# На BotHost её нужно создать в разделе "Переменные" или "Environment"
+API_TOKEN = os.getenv('BOT_TOKEN')
+
+# Проверка, что переменная установлена, чтобы бот не упал с ошибкой позже
+if not API_TOKEN:
+    exit("Ошибка: Переменная окружения BOT_TOKEN не установлена!")
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
